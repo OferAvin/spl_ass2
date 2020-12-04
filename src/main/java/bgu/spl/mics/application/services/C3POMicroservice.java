@@ -17,10 +17,14 @@ public class C3POMicroservice extends MicroService {
 	
     public C3POMicroservice() {
         super("C3PO");
+        //register him self to bus
+
     }
 
     @Override
     protected void initialize() {
+        //subscribe him self to event of type attack
 
     }
+
 }

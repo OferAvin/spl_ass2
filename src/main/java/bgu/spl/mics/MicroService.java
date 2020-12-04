@@ -1,4 +1,5 @@
 package bgu.spl.mics;
+import bgu.spl.mics.MessageBusImpl;
 
 /**
  * The MicroService is an abstract class that any micro-service in the system
@@ -20,13 +21,17 @@ package bgu.spl.mics;
  */
 public abstract class MicroService implements Runnable { 
     
-
+    private String name_;
+    private MessageBusImpl messageBus;
+    private boolean terminate;
     /**
      * @param name the micro-service name (used mainly for debugging purposes -
      *             does not have to be unique)
      */
     public MicroService(String name) {
-    	
+    	name_ = name;
+    	messageBus = new MessageBusImpl();// make sure it is singelton
+        terminate = false;
     }
 
     /**
@@ -116,7 +121,7 @@ public abstract class MicroService implements Runnable {
      *               {@code e}.
      */
     protected final <T> void complete(Event<T> e, T result) {
-    	
+    	messageBus.complete(e,result);
     }
 
     /**
@@ -129,7 +134,7 @@ public abstract class MicroService implements Runnable {
      * message.
      */
     protected final void terminate() {
-    	
+    	terminate = true;
     }
 
     /**
@@ -137,7 +142,7 @@ public abstract class MicroService implements Runnable {
      *         construction time and is used mainly for debugging purposes.
      */
     public final String getName() {
-        return null;
+        return name_;
     }
 
     /**
@@ -146,7 +151,22 @@ public abstract class MicroService implements Runnable {
      */
     @Override
     public final void run() {
-    	
+        //register
+        messageBus.register(this);
+        //initialize
+        initialize();
+    	// message loop pattern
+        while (!terminate){
+            try {
+                Message message = messageBus.awaitMessage(this);
+//                ActCallback callback = getCallback(message.getClass());
+//                find the right callback
+                callback.call(message);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+        messageBus.unregister(this);
+        }
     }
 
-}
