@@ -1,4 +1,5 @@
 package bgu.spl.mics;
+import java.util.concurrent.ConcurrentHashMap;
 import bgu.spl.mics.MessageBusImpl;
 
 /**
@@ -19,8 +20,8 @@ import bgu.spl.mics.MessageBusImpl;
  * Only private fields and methods may be added to this class.
  * <p>
  */
-public abstract class MicroService implements Runnable { 
-    
+public abstract class MicroService implements Runnable {
+    private ConcurrentHashMap<Class<? extends Message>,Callback> message2callback;
     private String name_;
     private MessageBusImpl messageBus;
     private boolean terminate;
@@ -30,8 +31,9 @@ public abstract class MicroService implements Runnable {
      */
     public MicroService(String name) {
     	name_ = name;
-    	messageBus = new MessageBusImpl();// make sure it is singelton
+    	messageBus = MessageBusImpl.getInstance();
         terminate = false;
+        message2callback = new ConcurrentHashMap<>();
     }
 
     /**
@@ -56,9 +58,13 @@ public abstract class MicroService implements Runnable {
      *                 queue.
      */
     protected final <T, E extends Event<T>> void subscribeEvent(Class<E> type, Callback<E> callback) {
-    	// if type not exist(if i dont allready subscribe to this type of event)
+        // if type not exist(if i dont allready subscribe to this type of event)
+        if(!message2callback.contains(type)){
             // add type to my hash map and map his callback
+    	    message2callback.put(type,callback);
             // call subscribeEvent of Mb
+            messageBus.subscribeEvent(type,this);
+        }
     }
 
     /**
@@ -83,8 +89,12 @@ public abstract class MicroService implements Runnable {
      */
     protected final <B extends Broadcast> void subscribeBroadcast(Class<B> type, Callback<B> callback) {
         // if type not exist(if i dont allready subscribe to this type of Broadcast)
+        if(!message2callback.contains(type)){
             // add type to my hash map and map his callback
+            message2callback.put(type,callback);
             // call subscribeBroadcast of Mb
+            messageBus.subscribeBroadcast(type,this);
+        }
     }
 
     /**
@@ -101,7 +111,7 @@ public abstract class MicroService implements Runnable {
      */
     protected final <T> Future<T> sendEvent(Event<T> e) {
     	// call Mb sendEvent
-        return null;
+        return messageBus.sendEvent(e);
     }
 
     /**
@@ -112,6 +122,7 @@ public abstract class MicroService implements Runnable {
      */
     protected final void sendBroadcast(Broadcast b) {
     	//call Mb sendBroadcast
+        messageBus.sendBroadcast(b);
     }
 
     /**
@@ -163,9 +174,8 @@ public abstract class MicroService implements Runnable {
         while (!terminate){
             try {
                 Message message = messageBus.awaitMessage(this);
-//                ActCallback callback = getCallback(message.getClass());
-//                find the right callback
-//                callback.call(message);
+                //find the right callback
+                message2callback.get(message.getClass()).call(message);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }

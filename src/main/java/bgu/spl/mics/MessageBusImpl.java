@@ -1,13 +1,41 @@
 package bgu.spl.mics;
+import java.lang.reflect.Type;
+import java.util.Vector;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.LinkedBlockingQueue;
+
+
+
+
 /**
  * The {@link MessageBusImpl class is the implementation of the MessageBus interface.
  * Write your implementation here!
  * Only private fields and methods can be added to this class.
  */
 public class MessageBusImpl implements MessageBus {
-	private ConcurrentHashMap hashMap1;
-	
+	private ConcurrentHashMap<MicroService,LinkedBlockingQueue<Message>> microservice2queue;
+	private ConcurrentHashMap<Class<? extends Event>,LinkedBlockingQueue<MicroService>> event2microservice;
+	private ConcurrentHashMap<Broadcast, Vector<MicroService>> broadcast2microservice;
+	private ConcurrentHashMap<Class<? extends Event>,Future> event2Future;
+	private static MessageBusImpl messageBusInstance = null;
+
+	public static synchronized MessageBusImpl getInstance(){
+		if (messageBusInstance==null){
+			synchronized (MessageBusImpl.class){
+				if (messageBusInstance==null){
+					messageBusInstance = new MessageBusImpl();
+				}
+			}
+		}
+		return messageBusInstance;
+	}
+
+	private MessageBusImpl(){
+		microservice2queue = new ConcurrentHashMap<>();
+		event2microservice = new ConcurrentHashMap<>();
+		broadcast2microservice = new ConcurrentHashMap<>();
+		event2Future = new ConcurrentHashMap<>();
+	}
 	@Override
 	public <T> void subscribeEvent(Class<? extends Event<T>> type, MicroService m) {
 		// check if type exist -*critical*-
@@ -31,7 +59,7 @@ public class MessageBusImpl implements MessageBus {
 	@Override
 	public void sendBroadcast(Broadcast b) {
 		// check broadcast type
-		// if someone subscribe to this type:
+		// if someone subscribe to this type: -*critical*-
 		 		//get the broadcast map list
 				// add to q of all ms in list
 		//else return null;
