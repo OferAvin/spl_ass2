@@ -56,7 +56,9 @@ public abstract class MicroService implements Runnable {
      *                 queue.
      */
     protected final <T, E extends Event<T>> void subscribeEvent(Class<E> type, Callback<E> callback) {
-    	
+    	// if type not exist(if i dont allready subscribe to this type of event)
+            // add type to my hash map and map his callback
+            // call subscribeEvent of Mb
     }
 
     /**
@@ -80,7 +82,9 @@ public abstract class MicroService implements Runnable {
      *                 queue.
      */
     protected final <B extends Broadcast> void subscribeBroadcast(Class<B> type, Callback<B> callback) {
-    	
+        // if type not exist(if i dont allready subscribe to this type of Broadcast)
+            // add type to my hash map and map his callback
+            // call subscribeBroadcast of Mb
     }
 
     /**
@@ -96,8 +100,8 @@ public abstract class MicroService implements Runnable {
      * 	       			null in case no micro-service has subscribed to {@code e.getClass()}.
      */
     protected final <T> Future<T> sendEvent(Event<T> e) {
-    	
-        return null; 
+    	// call Mb sendEvent
+        return null;
     }
 
     /**
@@ -107,7 +111,7 @@ public abstract class MicroService implements Runnable {
      * @param b The broadcast message to send
      */
     protected final void sendBroadcast(Broadcast b) {
-    	
+    	//call Mb sendBroadcast
     }
 
     /**
@@ -161,7 +165,7 @@ public abstract class MicroService implements Runnable {
                 Message message = messageBus.awaitMessage(this);
 //                ActCallback callback = getCallback(message.getClass());
 //                find the right callback
-                callback.call(message);
+//                callback.call(message);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }

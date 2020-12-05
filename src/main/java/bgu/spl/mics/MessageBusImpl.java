@@ -24,7 +24,8 @@ public class MessageBusImpl implements MessageBus {
 
 	@Override @SuppressWarnings("unchecked")
 	public <T> void complete(Event<T> e, T result) {
-		
+		// find the Future map to this event
+		// Future.resolve(result)
 	}
 
 	@Override
@@ -33,15 +34,19 @@ public class MessageBusImpl implements MessageBus {
 		// if someone subscribe to this type:
 		 		//get the broadcast map list
 				// add to q of all ms in list
+		//else return null;
 	}
 
 	
 	@Override
 	public <T> Future<T> sendEvent(Event<T> e) {
+		// create Future eventFuture= null
 		// check event type
 		// if someone subscribe to this type:
+			// eventFuture = new Future
 			// get the next microservice from the map event q
 			// add the event to the microservice message q -*critical in order to ensure robin*-
+		// return eventFuture;
         return null;
 	}
 
