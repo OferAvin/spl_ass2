@@ -18,7 +18,7 @@ class MessageBusImplTest {
     @BeforeEach
     void setUp() {
         e1 = new ExampleEvent("attack");
-        messageBus = new MessageBusImpl();
+        messageBus = MessageBusImpl.getInstance();
         b1 = new ExampleBroadcast("hi to everyone how subscribe to me");
     }
 
