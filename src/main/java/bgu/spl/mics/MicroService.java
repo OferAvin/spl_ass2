@@ -1,4 +1,6 @@
 package bgu.spl.mics;
+import java.util.concurrent.ConcurrentHashMap;
+import bgu.spl.mics.MessageBusImpl;
 
 /**
  * The MicroService is an abstract class that any micro-service in the system
@@ -18,15 +20,20 @@ package bgu.spl.mics;
  * Only private fields and methods may be added to this class.
  * <p>
  */
-public abstract class MicroService implements Runnable { 
-    
-
+public abstract class MicroService implements Runnable {
+    private ConcurrentHashMap<Class<? extends Message>,Callback> message2callback;
+    private String name_;
+    private MessageBusImpl messageBus;
+    private boolean terminate;
     /**
      * @param name the micro-service name (used mainly for debugging purposes -
      *             does not have to be unique)
      */
     public MicroService(String name) {
-    	
+    	name_ = name;
+    	messageBus = MessageBusImpl.getInstance();
+        terminate = false;
+        message2callback = new ConcurrentHashMap<>();
     }
 
     /**
@@ -51,7 +58,13 @@ public abstract class MicroService implements Runnable {
      *                 queue.
      */
     protected final <T, E extends Event<T>> void subscribeEvent(Class<E> type, Callback<E> callback) {
-    	
+        // if type not exist(if i dont allready subscribe to this type of event)
+        if(!message2callback.contains(type)){
+            // add type to my hash map and map his callback
+    	    message2callback.put(type,callback);
+            // call subscribeEvent of Mb
+            messageBus.subscribeEvent(type,this);
+        }
     }
 
     /**
@@ -75,7 +88,13 @@ public abstract class MicroService implements Runnable {
      *                 queue.
      */
     protected final <B extends Broadcast> void subscribeBroadcast(Class<B> type, Callback<B> callback) {
-    	
+        // if type not exist(if i dont allready subscribe to this type of Broadcast)
+        if(!message2callback.contains(type)){
+            // add type to my hash map and map his callback
+            message2callback.put(type,callback);
+            // call subscribeBroadcast of Mb
+            messageBus.subscribeBroadcast(type,this);
+        }
     }
 
     /**
@@ -91,8 +110,8 @@ public abstract class MicroService implements Runnable {
      * 	       			null in case no micro-service has subscribed to {@code e.getClass()}.
      */
     protected final <T> Future<T> sendEvent(Event<T> e) {
-    	
-        return null; 
+    	// call Mb sendEvent
+        return messageBus.sendEvent(e);
     }
 
     /**
@@ -102,7 +121,8 @@ public abstract class MicroService implements Runnable {
      * @param b The broadcast message to send
      */
     protected final void sendBroadcast(Broadcast b) {
-    	
+    	//call Mb sendBroadcast
+        messageBus.sendBroadcast(b);
     }
 
     /**
@@ -116,7 +136,7 @@ public abstract class MicroService implements Runnable {
      *               {@code e}.
      */
     protected final <T> void complete(Event<T> e, T result) {
-    	
+    	messageBus.complete(e,result);
     }
 
     /**
@@ -129,7 +149,7 @@ public abstract class MicroService implements Runnable {
      * message.
      */
     protected final void terminate() {
-    	
+    	terminate = true;
     }
 
     /**
@@ -137,7 +157,7 @@ public abstract class MicroService implements Runnable {
      *         construction time and is used mainly for debugging purposes.
      */
     public final String getName() {
-        return null;
+        return name_;
     }
 
     /**
@@ -146,7 +166,21 @@ public abstract class MicroService implements Runnable {
      */
     @Override
     public final void run() {
-    	
+        //register
+        messageBus.register(this);
+        //initialize
+        initialize();
+    	// message loop pattern
+        while (!terminate){
+            try {
+                Message message = messageBus.awaitMessage(this);
+                //find the right callback
+                message2callback.get(message.getClass()).call(message);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+        messageBus.unregister(this);
+        }
     }
 
-}
