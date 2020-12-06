@@ -1,6 +1,5 @@
-idea
-idea/*
-spl_2.iml
-idea
+.idea/*
+.idea/
 target
 target/*
+spl211.iml
