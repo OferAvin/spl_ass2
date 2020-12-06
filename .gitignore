@@ -1,4 +1,6 @@
 ./idea
 ./idea/*
 spl_2.iml
-
+idea
+./target
+./target/*
