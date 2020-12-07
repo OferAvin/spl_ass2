@@ -19,9 +19,8 @@ public class MessageBusImpl implements MessageBus {
 	private ConcurrentHashMap<Class<? extends Broadcast>, Vector<MicroService>> broadcast2microservice;
 	private ConcurrentHashMap<Event,Future> event2Future;
 	private static MessageBusImpl messageBusInstance = null;
-	private Object lockEvent2Ms = new Object();
 
-	public static synchronized MessageBusImpl getInstance(){
+	public static MessageBusImpl getInstance(){
 		if (messageBusInstance==null){
 			synchronized (MessageBusImpl.class){
 				if (messageBusInstance==null){
@@ -45,7 +44,10 @@ public class MessageBusImpl implements MessageBus {
 			//if dont exist add the type
 		event2microservice.putIfAbsent(type, new LinkedBlockingQueue<MicroService>());
 		//add m to his map q;
-		event2microservice.get(type).add(m);
+		LinkedBlockingQueue<MicroService> subscribersQ = event2microservice.get(type);
+		synchronized (type){
+			subscribersQ.add(m);
+		}
 	}
 
 	@Override
@@ -70,12 +72,18 @@ public class MessageBusImpl implements MessageBus {
 		// check broadcast type
 		Class type = b.getClass();
 		// if someone subscribe to this type:
-		if(broadcast2microservice.containsKey(type)){
+		if (broadcast2microservice.containsKey(type)) {
 			//get the broadcast map list
 			Vector<MicroService> subscribers = broadcast2microservice.get(type);
-			// add to q of all ms in list need to check if -*critical*-
-			for (MicroService m: subscribers) {
-				microservice2queue.get(m).add(b);
+			// add to q of all ms in list and notify need to check if -*critical*-
+			for (MicroService m : subscribers) {
+				LinkedBlockingQueue<Message> messageQ = microservice2queue.get(m);
+				synchronized (m) {
+					if(messageQ != null){
+						messageQ.add(b);
+						notifyAll();
+					}
+				}
 			}
 		}
 	}
@@ -93,10 +101,16 @@ public class MessageBusImpl implements MessageBus {
 			eventFuture = new Future<>();
 			event2Future.put(e, eventFuture);
 
-			LinkedBlockingQueue<MicroService> msQ = event2microservice.get(eventType);
-			MicroService m = safeRoundRobin(msQ);
-			// add the event to the microservice message q need to check if -*critical*-
-			microservice2queue.get(m).add(e);
+			LinkedBlockingQueue<MicroService> subscribersQ = event2microservice.get(eventType);
+			MicroService m = safeRoundRobin(eventType, subscribersQ);
+			// add the event to the microservice message and notify q need to check if -*critical*-
+			LinkedBlockingQueue<Message> messageQ = microservice2queue.get(m);
+			synchronized (m){
+				if(messageQ != null){
+					messageQ.add(e);
+					notifyAll();
+				}
+			}
 		}
 			return eventFuture;
 	}
@@ -104,35 +118,45 @@ public class MessageBusImpl implements MessageBus {
 	@Override
 	public void register(MicroService m) {
 		// add m to has map and create his q;
+		microservice2queue.put(m, new LinkedBlockingQueue<>());
 	}
 
 	@Override
 	public void unregister(MicroService m) {
+		//change terminate to true
+		m.terminate();
 		//clean all reference related to him: if q/vector is empty after act remove key
+
+
 	}
 
 	@Override
 	public Message awaitMessage(MicroService m) throws InterruptedException {
 		// if notregister
+		if(!microservice2queue.containsKey(m))
 			//throw exp
+			throw new IllegalStateException("this microservice is not registered");
+		LinkedBlockingQueue<Message> messageQ = microservice2queue.get(m);
 		//while(q is empty)
-			//wait
-		// return q.pop
-		return null;
-	}
-
-	private MicroService safeRoundRobin(LinkedBlockingQueue<MicroService> q){
-		synchronized (q) {
-			try {
-				// get the next microservice from the map event q
-				MicroService m = q.take();
-				// -*critical in order to ensure round robin*-
-				q.add(m);
-				return m;
-			} catch (InterruptedException interruptedException) {
-				return null;
+		synchronized (m){
+			while (messageQ.isEmpty()) {
+				//wait
+				wait();
 			}
+			// return q.pop
+			return messageQ.poll(); //check later if can be outside the sync
 		}
 	}
+
+	private MicroService safeRoundRobin(Object lock, LinkedBlockingQueue<MicroService> q) {
+		synchronized (lock){
+			// -*critical in order to ensure round robin*-
+			// get the next microservice from the map event q
+			MicroService m = q.poll();
+			q.add(m);
+			return m;
+		}
+	}
+
 }
 
