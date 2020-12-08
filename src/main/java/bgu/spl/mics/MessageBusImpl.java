@@ -5,19 +5,17 @@ import java.util.Vector;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
 
-
-
-
-
 /**
  * The {@link MessageBusImpl class is the implementation of the MessageBus interface.
  * Write your implementation here!
  * Only private fields and methods can be added to this class.
  */
 public class MessageBusImpl implements MessageBus {
+
 	private static class SingletonHolder{
 		private static MessageBusImpl instance = new MessageBusImpl();
 	}
+
 	private ConcurrentHashMap<MicroService,LinkedBlockingQueue<Message>> microservice2queue;
 	private ConcurrentHashMap<Class<? extends Event>,LinkedBlockingQueue<MicroService>> event2microservice;
 	private ConcurrentHashMap<Class<? extends Broadcast>, Vector<MicroService>> broadcast2microservice;
@@ -95,6 +93,7 @@ public class MessageBusImpl implements MessageBus {
 		// if someone subscribe to this type:
 		if(event2microservice.containsKey(eventType)) {
 			// assign future to event
+
 			eventFuture = new Future<T>();
 			event2Future.put(e, eventFuture);
 

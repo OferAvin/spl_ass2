@@ -1,6 +1,5 @@
 package bgu.spl.mics.application.messages;
 import bgu.spl.mics.Event;
-
 import java.util.List;
 
 public class AttackEvent implements Event<Boolean> {
@@ -11,5 +10,4 @@ public class AttackEvent implements Event<Boolean> {
         EwoksSerialNumList = serials;
         duration_ = duration;
     }
-	
 }

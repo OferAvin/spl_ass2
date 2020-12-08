@@ -7,7 +7,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Vector;
 
-
 import bgu.spl.mics.MicroService;
 
 /**
@@ -22,7 +21,6 @@ public class LeiaMicroservice extends MicroService {
 	private Attack[] attacks;
 	private Vector<Future<Boolean>> attacksFuture;
 
-	
     public LeiaMicroservice(Attack[] attacks) {
         super("Leia");
 		this.attacks = attacks;
@@ -36,6 +34,5 @@ public class LeiaMicroservice extends MicroService {
             attacksFuture.add(sendEvent(attackEvent));
         }
         // subscribe to terminate broadcast
-
     }
 }

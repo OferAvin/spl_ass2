@@ -22,6 +22,7 @@ public class Ewok {
      */
     public void acquire() {
 		available = false;
+
     }
 
     /**
@@ -32,11 +33,15 @@ public class Ewok {
     	synchronized (this){
     	    notifyAll();
         }
+
+    	
+
     }
 
     public boolean isAvailable(){
         return available;
     }
+
 
     public int getSerialNumber(){return serialNumber;}
 
