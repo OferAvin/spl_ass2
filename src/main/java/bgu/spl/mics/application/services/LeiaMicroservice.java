@@ -48,9 +48,8 @@ public class LeiaMicroservice extends MicroService {
         BombDestroyerEvent bombDestroyerEvent = new BombDestroyerEvent();
         Future bdF = sendEvent(bombDestroyerEvent);
         bdF.get();
-        TerminateBroadcast tb = new TerminateBroadcast();
-        sendBroadcast(tb);
-
+        TerminateBroadcast terminateBroadcast = new TerminateBroadcast();
+        sendBroadcast(terminateBroadcast);
     }
 
 }
