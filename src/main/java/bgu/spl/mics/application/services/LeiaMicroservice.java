@@ -27,11 +27,15 @@ public class LeiaMicroservice extends MicroService {
 		attacksFuture = new Vector<Future<Boolean>>();
     }
 
+
     @Override
     protected void initialize() {
         for (Attack attack:attacks) {
             AttackEvent attackEvent = new AttackEvent(attack.getEwoksSerialNumList(),attack.getDuration());
             attacksFuture.add(sendEvent(attackEvent));
+        }
+        for (Future f : attacksFuture){
+            f.get();
         }
         // subscribe to terminate broadcast
     }
