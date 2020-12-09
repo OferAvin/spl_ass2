@@ -13,7 +13,6 @@ public class Ewok {
 	public Ewok(int serialNumber){
 	    this.serialNumber = serialNumber;
 	    available = true;
-
     }
 	
   
@@ -28,14 +27,9 @@ public class Ewok {
     /**
      * release an Ewok
      */
-    public void release() {
+    public synchronized void release() {
     	available = true;
-    	synchronized (this){
-    	    notifyAll();
-        }
-
-    	
-
+    	notifyAll();
     }
 
     public boolean isAvailable(){
