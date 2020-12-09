@@ -8,6 +8,8 @@ import bgu.spl.mics.application.passiveObjects.*;
 
 import bgu.spl.mics.MicroService;
 
+import java.util.List;
+
 
 /**
  * C3POMicroservices is in charge of the handling {@link AttackEvent}.
@@ -22,16 +24,29 @@ public class C3POMicroservice extends MicroService {
 	private Ewoks ewoks;
     public C3POMicroservice() {
         super("C3PO");
-        ewoks = new Ewoks();
+        ewoks = Ewoks.getInstance();
     }
 
     @Override
     protected void initialize() {
-        //subscribe him self to event of type attack
-
+        // subscribe himself to TerminateBroadcast
         subscribeBroadcast(TerminateBroadcast.class,callback->{terminate();});
-        subscribeEvent(AttackEvent.class,callback->{
-
+        //subscribe himself to event of type attack
+        subscribeEvent(AttackEvent.class,(AttackEvent attackEvent)->{
+            //get the Serial num for the requested ewoks
+            List<Integer> requiredEwoks = attackEvent.getEwoksSerialNumList();
+            // acquire the ewoks
+            ewoks.getEwoks(requiredEwoks);
+            try {
+                // perform the attack
+                Thread.sleep(attackEvent.getDuration_());
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            // realse the ewoks
+            ewoks.realseEwoks(requiredEwoks);
+            // informed the event is complete
+            complete(attackEvent,true);
         });
     }
 

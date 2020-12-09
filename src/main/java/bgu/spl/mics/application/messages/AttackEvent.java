@@ -10,4 +10,12 @@ public class AttackEvent implements Event<Boolean> {
         EwoksSerialNumList = serials;
         duration_ = duration;
     }
+
+    public List<Integer> getEwoksSerialNumList() {
+        return EwoksSerialNumList;
+    }
+
+    public int getDuration_() {
+        return duration_;
+    }
 }
