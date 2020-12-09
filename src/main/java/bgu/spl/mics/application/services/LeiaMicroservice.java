@@ -1,4 +1,7 @@
 package bgu.spl.mics.application.services;
+import bgu.spl.mics.application.messages.BombDestroyerEvent;
+import bgu.spl.mics.application.messages.DeactivationEvent;
+import bgu.spl.mics.application.messages.TerminateBroadcast;
 import bgu.spl.mics.application.passiveObjects.Attack;
 import bgu.spl.mics.application.messages.AttackEvent;
 import bgu.spl.mics.*;
@@ -27,6 +30,7 @@ public class LeiaMicroservice extends MicroService {
 		attacksFuture = new Vector<Future<Boolean>>();
     }
 
+
     @Override
     protected void initialize() {
         for (Attack attack:attacks) {
@@ -34,5 +38,18 @@ public class LeiaMicroservice extends MicroService {
             attacksFuture.add(sendEvent(attackEvent));
         }
         // subscribe to terminate broadcast
+        subscribeBroadcast(TerminateBroadcast.class, c -> terminate());
+        for (Future f : attacksFuture){
+            f.get();
+        }
+        DeactivationEvent deactivationEvent = new DeactivationEvent();
+        Future deF = sendEvent(deactivationEvent);
+        deF.get();
+        BombDestroyerEvent bombDestroyerEvent = new BombDestroyerEvent();
+        Future bdF = sendEvent(bombDestroyerEvent);
+        bdF.get();
+        TerminateBroadcast terminateBroadcast = new TerminateBroadcast();
+        sendBroadcast(terminateBroadcast);
     }
+
 }
