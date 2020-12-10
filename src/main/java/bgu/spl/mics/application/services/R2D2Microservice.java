@@ -1,4 +1,5 @@
 package bgu.spl.mics.application.services;
+import bgu.spl.mics.application.Main;
 import bgu.spl.mics.application.messages.DeactivationEvent;
 import bgu.spl.mics.MicroService;
 import bgu.spl.mics.application.messages.TerminateBroadcast;
@@ -41,5 +42,6 @@ public class R2D2Microservice extends MicroService {
             terminate();
             diary.setR2D2Terminate(System.currentTimeMillis());
         });
+        Main.downLatch.countDown();
     }
 }

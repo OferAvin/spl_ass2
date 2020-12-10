@@ -1,4 +1,5 @@
 package bgu.spl.mics.application.services;
+import bgu.spl.mics.application.Main;
 import bgu.spl.mics.application.messages.BombDestroyerEvent;
 import bgu.spl.mics.application.messages.DeactivationEvent;
 import bgu.spl.mics.application.messages.TerminateBroadcast;
@@ -35,16 +36,23 @@ public class LeiaMicroservice extends MicroService {
     @Override
     protected void initialize() {
         Diary diary  = Diary.getInstance();
+        //wait till all troops are assembled
+        try {
+            Main.downLatch.await();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        //send all attacks
+        for (Attack attack:attacks) {
+            AttackEvent attackEvent = new AttackEvent(attack.getEwoksSerialNumList(),attack.getDuration());
+            //waite while (no subscribers)
+            attacksFuture.add(sendEvent(attackEvent));
+        }
         // subscribe to terminate broadcast
         subscribeBroadcast(TerminateBroadcast.class, (TerminateBroadcast terminateBroadcast) -> {
             terminate();
             diary.setLeiaTerminate(System.currentTimeMillis());
         });
-        //send all attacks
-        for (Attack attack:attacks) {
-            AttackEvent attackEvent = new AttackEvent(attack.getEwoksSerialNumList(),attack.getDuration());
-            attacksFuture.add(sendEvent(attackEvent));
-        }
         //wait till all attacks futures are resolved
         for (Future f : attacksFuture){
             f.get();

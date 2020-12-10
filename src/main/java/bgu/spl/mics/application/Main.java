@@ -1,10 +1,8 @@
 package bgu.spl.mics.application;
+import bgu.spl.mics.application.passiveObjects.Input;
 import bgu.spl.mics.application.services.*;
 import com.google.gson.*;
-import com.google.gson.stream.JsonReader;
 import bgu.spl.mics.application.passiveObjects.*;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Vector;
@@ -18,20 +16,17 @@ import java.util.concurrent.CountDownLatch;
 public class Main {
 	public static CountDownLatch downLatch;
 	public static void main(String[] args) {
-		// reading the json file to object class Input
-		Gson gson = new Gson();
-		JsonReader reader = null;
+		Input input = null;
 		try {
-			reader = new JsonReader(new FileReader("/home/spl211/stud/SPL/Ass2/spl_ass2/src/main/input.json"));
-		} catch (FileNotFoundException e) {
+			input = JsonInputReader.getInputFromJson("/home/ofer/Desktop/Studies/SPL/spl_2/src/main/input.json");
+		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		Input input = gson.fromJson(reader,Input.class);
 		// initialize diary
 		Diary diary = Diary.getInstance();
 		// initialize Ewoks
 		Ewoks ewoks = Ewoks.getInstance();
-		ewoks.init(input.getNumEwoks());
+		ewoks.init(input.getEwoks());
 		// initialize threads
 		Vector<Thread> threadVector = new Vector<Thread>();
 		// init C3PO
@@ -41,10 +36,10 @@ public class Main {
 		Thread HanSolo = new Thread(new HanSoloMicroservice());
 		threadVector.add(HanSolo);
 		// init R2D2
-		Thread R2S2 = new Thread(new R2D2Microservice(input.getR2D2_duration()));
+		Thread R2S2 = new Thread(new R2D2Microservice(input.getR2D2()));
 		threadVector.add(R2S2);
 		// init Lando
-		Thread Lando = new Thread(new LandoMicroservice(input.getLando_duration()));
+		Thread Lando = new Thread(new LandoMicroservice(input.getLando()));
 		threadVector.add(Lando);
 		// init downLatch
 		downLatch = new CountDownLatch(threadVector.size());
@@ -65,15 +60,12 @@ public class Main {
 		// write the output json
 		Gson gsonOutput = new GsonBuilder().setPrettyPrinting().create();
 		try {
-			FileWriter fileWriter = new FileWriter("/home/spl211/stud/SPL/Ass2/spl_ass2/src/main/output.json");
+			FileWriter fileWriter = new FileWriter("//home/ofer/Desktop/Studies/SPL/spl_2/src/main/output.json");
 			gsonOutput.toJson(diary,fileWriter);
 			fileWriter.flush();
 			fileWriter.close();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-
-
-
 	}
 }

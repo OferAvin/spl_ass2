@@ -1,5 +1,6 @@
 package bgu.spl.mics.application.services;
 
+import bgu.spl.mics.application.Main;
 import bgu.spl.mics.application.messages.TerminateBroadcast;
 import bgu.spl.mics.application.passiveObjects.Attack;
 import bgu.spl.mics.application.messages.AttackEvent;
@@ -55,6 +56,7 @@ public class C3POMicroservice extends MicroService {
             // informed the event is complete
             complete(attackEvent,true);
         });
+        Main.downLatch.countDown();
     }
 
 }

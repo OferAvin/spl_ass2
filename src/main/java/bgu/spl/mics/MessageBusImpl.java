@@ -76,7 +76,7 @@ public class MessageBusImpl implements MessageBus {
 				synchronized (m) {
 					if(messageQ != null){
 						messageQ.add(b);
-						notifyAll();
+						m.notifyAll();
 					}
 				}
 			}
@@ -104,7 +104,7 @@ public class MessageBusImpl implements MessageBus {
 			synchronized (m){
 				if(messageQ != null){
 					messageQ.add(e);
-					notifyAll();
+					m.notifyAll();
 				}
 			}
 		}
@@ -137,7 +137,7 @@ public class MessageBusImpl implements MessageBus {
 		synchronized (m){
 			while (messageQ.isEmpty()) {
 				//wait
-				wait();
+				m.wait();
 			}
 			// return q.pop
 			return messageQ.poll(); //check later if can be outside the sync

@@ -1,5 +1,6 @@
 package bgu.spl.mics.application.services;
 
+import bgu.spl.mics.application.Main;
 import bgu.spl.mics.application.messages.TerminateBroadcast;
 import bgu.spl.mics.MicroService;
 import bgu.spl.mics.application.passiveObjects.Attack;
@@ -52,5 +53,6 @@ public class HanSoloMicroservice extends MicroService {
             // informed the event is complete
             complete(attackEvent,true);
         });
+        Main.downLatch.countDown();
     }
 }
