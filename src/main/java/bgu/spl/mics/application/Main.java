@@ -8,6 +8,7 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Vector;
+import java.util.concurrent.CountDownLatch;
 
 
 /** This is the Main class of the application. You should parse the input file,
@@ -15,6 +16,7 @@ import java.util.Vector;
  * In the end, you should output a JSON.
  */
 public class Main {
+	public static CountDownLatch downLatch;
 	public static void main(String[] args) {
 		// reading the json file to object class Input
 		Gson gson = new Gson();
@@ -44,6 +46,8 @@ public class Main {
 		// init Lando
 		Thread Lando = new Thread(new LandoMicroservice(input.getLando_duration()));
 		threadVector.add(Lando);
+		// init downLatch
+		downLatch = new CountDownLatch(threadVector.size());
 		// init Leia
 		Thread Leia = new Thread(new LeiaMicroservice(input.getAttacks()));
 		threadVector.add(Leia);
