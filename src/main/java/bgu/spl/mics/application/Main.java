@@ -26,7 +26,7 @@ public class Main {
 		}
 		Input input = gson.fromJson(reader,Input.class);
 		// initialize diary
-//		Diary diary = Diary.getInstance();
+		Diary diary = Diary.getInstance();
 		// initialize Ewoks
 		Ewoks ewoks = Ewoks.getInstance();
 		ewoks.init(input.getNumEwoks());
@@ -62,7 +62,7 @@ public class Main {
 		Gson gsonOutput = new GsonBuilder().setPrettyPrinting().create();
 		try {
 			FileWriter fileWriter = new FileWriter("/home/spl211/stud/SPL/Ass2/spl_ass2/src/main/output.json");
-//			gsonOutput.toJson(diary,fileWriter);
+			gsonOutput.toJson(diary,fileWriter);
 			fileWriter.flush();
 			fileWriter.close();
 		} catch (IOException e) {
