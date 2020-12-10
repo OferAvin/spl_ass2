@@ -12,29 +12,90 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public class Diary {
     private AtomicInteger totalAttacks;
-    private ConcurrentHashMap<String, Long> timestamps;
+    private long HanSoloFinish;
+    private long C3POFinish;
+    private long R2D2Deactivate;
+    private long LeiaTerminate;
+    private long C3POTerminate;
+    private long HanSoloTerminate;
+    private long R2D2Terminate;
+    private long LandoTerminate;
 
     private static class SingletonHolder {
         private static Diary instance = new Diary();
     }
+    private Diary(){
+        totalAttacks = new AtomicInteger(0);
+        HanSoloFinish = 0;
+        C3POFinish = 0;
+        R2D2Deactivate = 0;
+        LeiaTerminate = 0;
+        C3POTerminate = 0;
+        HanSoloTerminate = 0;
+        R2D2Terminate = 0;
+        LandoTerminate = 0;
+    }
+
+    //getters
     public static Diary getInstance(){
         return SingletonHolder.instance;
     }
 
-//    long HanSoloFinish;
-//    long C3POFinish;
-//    long R2D2Deactivate;
-//    long LeiaTerminate;
-//    long C3PTerminate;
-//    long R2D2Terminate;
-//    long LandoTerminate;
+    public AtomicInteger getTotalAttacks() {
+        return totalAttacks;
+    }
+    public long getHanSoloFinish() {
+        return HanSoloFinish;
+    }
+    public long getC3POFinish() {
+        return C3POFinish;
+    }
+    public long getR2D2Deactivate() {
+        return R2D2Deactivate;
+    }
+    public long getLeiaTerminate() {
+        return LeiaTerminate;
+    }
+    public long getHanSoloTerminate() {
+        return HanSoloTerminate;
+    }
+    public long getC3POTerminate() {
+        return C3POTerminate;
+    }
+    public long getR2D2Terminate() {
+        return R2D2Terminate;
+    }
+    public long getLandoTerminate() {
+        return LandoTerminate;
+    }
 
+    //setters
     public void increaseAttacksNum() {
         totalAttacks.incrementAndGet();
     }
-    public void logTimestamp(String eventToLog, Long timestamp){
-        timestamps.put(eventToLog, timestamp);
+    public void setHanSoloFinish(long timestamp){
+        HanSoloFinish = timestamp;
     }
-
+    public void setC3POFinish(long timestamp){
+        C3POFinish = timestamp;
+    }
+    public void setR2D2Deactivate(long timestamp){
+        R2D2Deactivate = timestamp;
+    }
+    public void setLeiaTerminate(long timestamp){
+        LeiaTerminate = timestamp;
+    }
+    public void setC3POTerminate(long timestamp){
+        C3POTerminate = timestamp;
+    }
+    public void setHanSoloTerminate(long timestamp){
+        HanSoloTerminate = timestamp;
+    }
+    public void setR2D2Terminate(long timestamp){
+        R2D2Terminate = timestamp;
+    }
+    public void setLandoTerminate(long timestamp){
+        LandoTerminate = timestamp;
+    }
 }
 

@@ -26,8 +26,12 @@ public class HanSoloMicroservice extends MicroService {
 
     @Override
     protected void initialize() {
+        Diary diary  = Diary.getInstance();
         // subscribe himself to TerminateBroadcast
-        subscribeBroadcast(TerminateBroadcast.class,callback->{terminate();});
+        subscribeBroadcast(TerminateBroadcast.class,(TerminateBroadcast terminateBroadcast)->{
+            terminate();
+            diary.setHanSoloTerminate(System.currentTimeMillis());
+        });
         //subscribe himself to event of type attack
         subscribeEvent(AttackEvent.class,(AttackEvent attackEvent)->{
             //get the Serial num for the requested ewoks
@@ -40,6 +44,9 @@ public class HanSoloMicroservice extends MicroService {
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
+            //log to diary
+            diary.setHanSoloFinish(System.currentTimeMillis());
+            diary.increaseAttacksNum();
             // realse the ewoks
             ewoks.realseEwoks(requiredEwoks);
             // informed the event is complete

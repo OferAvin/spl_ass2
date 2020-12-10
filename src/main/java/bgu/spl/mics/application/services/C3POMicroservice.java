@@ -31,7 +31,10 @@ public class C3POMicroservice extends MicroService {
     protected void initialize() {
         Diary diary  = Diary.getInstance();
         // subscribe himself to TerminateBroadcast
-        subscribeBroadcast(TerminateBroadcast.class,callback->{terminate();});
+        subscribeBroadcast(TerminateBroadcast.class,(TerminateBroadcast terminateBroadcast) -> {
+            terminate();
+            diary.setC3POTerminate(System.currentTimeMillis());
+        });
         //subscribe himself to event of type attack
         subscribeEvent(AttackEvent.class,(AttackEvent attackEvent)->{
             //get the Serial num for the requested ewoks
@@ -44,9 +47,9 @@ public class C3POMicroservice extends MicroService {
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
-            //add attack to diary
+            //log to diary
+            diary.setC3POFinish(System.currentTimeMillis());
             diary.increaseAttacksNum();
-            diary.logTimestamp();
             // realse the ewoks
             ewoks.realseEwoks(requiredEwoks);
             // informed the event is complete
