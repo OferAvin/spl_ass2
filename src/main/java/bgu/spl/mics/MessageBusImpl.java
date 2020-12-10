@@ -1,7 +1,6 @@
 package bgu.spl.mics;
 import java.lang.reflect.Type;
-import java.util.Queue;
-import java.util.Vector;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
 
@@ -119,9 +118,22 @@ public class MessageBusImpl implements MessageBus {
 
 	@Override
 	public void unregister(MicroService m) {
-		//change terminate to true
-		m.terminate();
 		//clean all reference related to him: if q/vector is empty after act remove key
+		Set<Class<? extends Event>> eventTypes = event2microservice.keySet();
+		for (Class<? extends Event> eventType : eventTypes) {
+			LinkedBlockingQueue<MicroService> q = event2microservice.get(eventType);
+			synchronized (eventType){
+				q.remove(m);
+			}
+		}
+		Set<Class<? extends Broadcast>> broadTypes = broadcast2microservice.keySet();
+		for(Class<? extends Broadcast> broadType : broadTypes){
+			Vector<MicroService> vec = broadcast2microservice.get(broadType);
+			vec.remove(m);
+		}
+		synchronized (m){
+			microservice2queue.remove(m);
+		}
 
 
 	}
