@@ -29,6 +29,7 @@ public class C3POMicroservice extends MicroService {
 
     @Override
     protected void initialize() {
+        Diary diary  = Diary.getInstance();
         // subscribe himself to TerminateBroadcast
         subscribeBroadcast(TerminateBroadcast.class,callback->{terminate();});
         //subscribe himself to event of type attack
@@ -43,6 +44,9 @@ public class C3POMicroservice extends MicroService {
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
+            //add attack to diary
+            diary.increaseAttacksNum();
+            diary.logTimestamp();
             // realse the ewoks
             ewoks.realseEwoks(requiredEwoks);
             // informed the event is complete
