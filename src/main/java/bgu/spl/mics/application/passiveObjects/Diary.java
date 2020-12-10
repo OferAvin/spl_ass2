@@ -13,6 +13,14 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class Diary {
     private AtomicInteger totalAttacks;
     private ConcurrentHashMap<String, Long> timestamps;
+
+    private static class SingletonHolder {
+        private static Diary instance = new Diary();
+    }
+    public static Diary getInstance(){
+        return SingletonHolder.instance;
+    }
+
 //    long HanSoloFinish;
 //    long C3POFinish;
 //    long R2D2Deactivate;
