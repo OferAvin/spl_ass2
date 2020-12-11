@@ -2,6 +2,7 @@ package bgu.spl.mics;
 import java.lang.reflect.Type;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.LinkedBlockingQueue;
 
 /**
@@ -17,7 +18,7 @@ public class MessageBusImpl implements MessageBus {
 
 	private ConcurrentHashMap<MicroService,LinkedBlockingQueue<Message>> microservice2queue;
 	private ConcurrentHashMap<Class<? extends Event>,LinkedBlockingQueue<MicroService>> event2microservice;
-	private ConcurrentHashMap<Class<? extends Broadcast>, Vector<MicroService>> broadcast2microservice;
+	private ConcurrentHashMap<Class<? extends Broadcast>, CopyOnWriteArrayList<MicroService>> broadcast2microservice;
 	private ConcurrentHashMap<Event,Future> event2Future;
 	private static MessageBusImpl messageBusInstance = null;
 
@@ -34,21 +35,19 @@ public class MessageBusImpl implements MessageBus {
 	}
 	@Override
 	public <T> void subscribeEvent(Class<? extends Event<T>> type, MicroService m) {
-		// check if type exist -*critical*-
-			//if dont exist add the type
+		// for every new event type map a microservice q
 		event2microservice.putIfAbsent(type, new LinkedBlockingQueue<MicroService>());
 		//add m to his map q;
-		LinkedBlockingQueue<MicroService> subscribersQ = event2microservice.get(type);
 		synchronized (type){
+			LinkedBlockingQueue<MicroService> subscribersQ = event2microservice.get(type);
 			subscribersQ.add(m);
 		}
 	}
 
 	@Override
 	public void subscribeBroadcast(Class<? extends Broadcast> type, MicroService m) {
-		// check if type exist -*critical*-
-			//if dont exist add the type
-		broadcast2microservice.putIfAbsent(type, new Vector<>());
+		// for every new Broadcast type map a microservice list
+		broadcast2microservice.putIfAbsent(type, new CopyOnWriteArrayList<>());
 		// add m to his map list;
 		broadcast2microservice.get(type).add(m);
 	}
@@ -68,8 +67,8 @@ public class MessageBusImpl implements MessageBus {
 		// if someone subscribe to this type:
 		if (broadcast2microservice.containsKey(type)) {
 			//get the broadcast map list
-			Vector<MicroService> subscribers = broadcast2microservice.get(type);
-			// add to q of all ms in list and notify need to check if -*critical*-
+			CopyOnWriteArrayList<MicroService> subscribers = broadcast2microservice.get(type);
+				// add to q of all ms in list and notify
 			for (MicroService m : subscribers) {
 				LinkedBlockingQueue<Message> messageQ = microservice2queue.get(m);
 				synchronized (m) {
@@ -79,6 +78,7 @@ public class MessageBusImpl implements MessageBus {
 					}
 				}
 			}
+
 		}
 	}
 
@@ -92,10 +92,8 @@ public class MessageBusImpl implements MessageBus {
 		// if someone subscribe to this type:
 		if(event2microservice.containsKey(eventType)) {
 			// assign future to event
-
 			eventFuture = new Future<T>();
 			event2Future.put(e, eventFuture);
-
 			LinkedBlockingQueue<MicroService> subscribersQ = event2microservice.get(eventType);
 			MicroService m = safeRoundRobin(eventType, subscribersQ);
 			// add the event to the microservice message and notify q need to check if -*critical*-
@@ -106,6 +104,7 @@ public class MessageBusImpl implements MessageBus {
 					m.notifyAll();
 				}
 			}
+
 		}
 			return eventFuture;
 	}
@@ -118,18 +117,26 @@ public class MessageBusImpl implements MessageBus {
 
 	@Override
 	public void unregister(MicroService m) {
-		//clean all reference related to him: if q/vector is empty after act remove key
+		//clean all reference related to him: if q/list is empty after act remove key
 		Set<Class<? extends Event>> eventTypes = event2microservice.keySet();
 		for (Class<? extends Event> eventType : eventTypes) {
 			LinkedBlockingQueue<MicroService> q = event2microservice.get(eventType);
 			synchronized (eventType){
-				q.remove(m);
+				if(q != null){
+					q.remove(m);
+					if(q.isEmpty()){
+						event2microservice.remove(eventType);
+					}
+				}
 			}
 		}
 		Set<Class<? extends Broadcast>> broadTypes = broadcast2microservice.keySet();
 		for(Class<? extends Broadcast> broadType : broadTypes){
-			Vector<MicroService> vec = broadcast2microservice.get(broadType);
-			vec.remove(m);
+			CopyOnWriteArrayList<MicroService> list = broadcast2microservice.get(broadType);
+			list.remove(m);
+			if(list.isEmpty()){
+				broadcast2microservice.remove(broadType);
+			}
 		}
 		synchronized (m){
 			microservice2queue.remove(m);
@@ -145,14 +152,11 @@ public class MessageBusImpl implements MessageBus {
 			//throw exp
 			throw new IllegalStateException("this microservice is not registered");
 		LinkedBlockingQueue<Message> messageQ = microservice2queue.get(m);
-		//while(q is empty)
 		synchronized (m){
 			while (messageQ.isEmpty()) {
-				//wait
 				m.wait();
 			}
-			// return q.pop
-			return messageQ.poll(); //check later if can be outside the sync
+			return messageQ.poll();
 		}
 	}
 

@@ -18,7 +18,7 @@ public class Main {
 	public static void main(String[] args) {
 		Input input = null;
 		try {
-			input = JsonInputReader.getInputFromJson("/home/ofer/Desktop/Studies/SPL/spl_2/src/main/input.json");
+			input = JsonInputReader.getInputFromJson("/home/spl211/stud/SPL/Ass2/spl_ass2/src/main/input.json");
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -60,7 +60,7 @@ public class Main {
 		// write the output json
 		Gson gsonOutput = new GsonBuilder().setPrettyPrinting().create();
 		try {
-			FileWriter fileWriter = new FileWriter("//home/ofer/Desktop/Studies/SPL/spl_2/src/main/output.json");
+			FileWriter fileWriter = new FileWriter("/home/spl211/stud/SPL/Ass2/spl_ass2/src/main/output.json");
 			gsonOutput.toJson(diary,fileWriter);
 			fileWriter.flush();
 			fileWriter.close();
