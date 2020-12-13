@@ -1,5 +1,6 @@
 package bgu.spl.mics;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -12,8 +13,9 @@ class MessageBusImplTest {
     ExampleBroadcast b1;
     ExampleBroadcastListenerService m1;
     ExampleBroadcastListenerService m2;
-    NonBroadcastListener m3;
+    ExampleEventHandlerService m3;
     ExampleEventHandlerService m4;
+
 
 
     @BeforeEach
@@ -21,13 +23,24 @@ class MessageBusImplTest {
         e1 = new ExampleEvent("attack");
         messageBus = MessageBusImpl.getInstance();
         b1 = new ExampleBroadcast("hi to everyone how subscribe to me");
+        m1 = new ExampleBroadcastListenerService("tamir");
+        m2 = new ExampleBroadcastListenerService("ofer");
+        m3 = new ExampleEventHandlerService("Noach");
+        m4 = new ExampleEventHandlerService("Moses");
+    }
+
+    @AfterEach
+    void clearSetUp(){
+        messageBus.unregister(m1);
+        messageBus.unregister(m2);
+        messageBus.unregister(m3);
+        messageBus.unregister(m4);
     }
 
     @Test
     void complete() {
-        m4 = new ExampleEventHandlerService("noach");
-        messageBus.register(m4);
-        m4.initialize();
+        messageBus.register(m3);
+        m3.initialize();
         Future<String> f = messageBus.sendEvent(e1);
         assertFalse(f.isDone());
         String toCheck = "hi";
@@ -37,22 +50,18 @@ class MessageBusImplTest {
     }
 
     @Test
-    void sendBroadcast() {
-        m1 = new ExampleBroadcastListenerService("tamir");
-        m2 = new ExampleBroadcastListenerService("ofer");
-        m4 = new ExampleEventHandlerService("noach");
-        messageBus.register(m1);
-        messageBus.register(m2);
-        messageBus.register(m4);
-        m1.initialize();
-        m2.initialize();
-        m4.initialize();
-        messageBus.sendBroadcast(b1);
+    void awaitMessage() {
+        try {
+            assertFalse(messageBus.awaitMessage(m3) instanceof ExampleEvent);
+
+        } catch (Exception e) {
+            assertEquals(e.getMessage(), "this microservice is not registered");
+        }
+        messageBus.register(m3);
+        m3.initialize();
         messageBus.sendEvent(e1);
         try {
-            assertEquals(b1,  messageBus.awaitMessage(m1));
-            assertEquals(b1, messageBus.awaitMessage(m2));
-            assertNotEquals(b1, messageBus.awaitMessage(m4));
+            assertTrue(messageBus.awaitMessage(m3)instanceof ExampleEvent);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
@@ -60,27 +69,39 @@ class MessageBusImplTest {
 
     @Test
     void sendEvent() {
-        m4 = new ExampleEventHandlerService("omer");
+        ExampleEvent e2 = new ExampleEvent("defence");
+        ExampleEvent e3 = new ExampleEvent("relax there is no need to fight");
+        messageBus.register(m3);
+        messageBus.register(m4);
+        m3.initialize();
         m4.initialize();
         messageBus.sendEvent(e1);
+        messageBus.sendEvent(e2);
+        messageBus.sendEvent(e3);
+        //check robin manner, this was not tested in the first application
         try {
-            assertEquals(e1,messageBus.awaitMessage(m4));
+            assertEquals(e1,messageBus.awaitMessage(m3));
+            assertEquals(e2,messageBus.awaitMessage(m4));
+            assertEquals(e3,messageBus.awaitMessage(m3));
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
     }
 
     @Test
-    void awaitMessage() {
-        m4 = new ExampleEventHandlerService("omer");
+    void sendBroadcast() {
+        messageBus.register(m1);
+        messageBus.register(m2);
+        messageBus.register(m3);
+        m1.initialize();
+        m2.initialize();
+        m3.initialize();
+        messageBus.sendBroadcast(b1);
+        messageBus.sendEvent(e1);
         try {
-            assertFalse(messageBus.awaitMessage(m4) instanceof ExampleEvent);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-        m4.initialize();
-        try {
-            assertTrue(messageBus.awaitMessage(m4)instanceof ExampleEvent);
+            assertEquals(b1,  messageBus.awaitMessage(m1));
+            assertEquals(b1, messageBus.awaitMessage(m2));
+            assertNotEquals(b1, messageBus.awaitMessage(m3));// check that only broadcast subscribers gets the broadcast message
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
