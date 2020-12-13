@@ -22,6 +22,7 @@ class EwokTest {
 
     @Test
     void release() {
+        e.acquire(); // added because we forgot it when first applied
         assertFalse(e.isAvailable());
         e.release();
         assertTrue(e.isAvailable());

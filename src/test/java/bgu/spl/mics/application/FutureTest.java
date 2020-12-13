@@ -1,6 +1,9 @@
 
 package bgu.spl.mics.application;
+import bgu.spl.mics.ExampleEventHandlerService;
 import bgu.spl.mics.Future;
+import bgu.spl.mics.MicroService;
+import bgu.spl.mics.application.services.HanSoloMicroservice;
 import org.junit.jupiter.api.BeforeEach;
 
 import org.junit.jupiter.api.Test;
