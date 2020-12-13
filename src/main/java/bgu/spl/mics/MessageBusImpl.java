@@ -85,7 +85,7 @@ public class MessageBusImpl implements MessageBus {
 	
 	@Override
 	public <T> Future<T> sendEvent(Event<T> e) {
-		// create Future eventFuture= null
+		// create Future eventFuture= nullevent2Future.get(e);
 		Future<T> eventFuture = null;
 		// check event type
 		Class eventType = e.getClass();

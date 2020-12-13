@@ -15,6 +15,7 @@ class MessageBusImplTest {
     NonBroadcastListener m3;
     ExampleEventHandlerService m4;
 
+
     @BeforeEach
     void setUp() {
         e1 = new ExampleEvent("attack");
@@ -24,27 +25,34 @@ class MessageBusImplTest {
 
     @Test
     void complete() {
-        Future<String> a = messageBus.sendEvent(e1);
+        m4 = new ExampleEventHandlerService("noach");
+        messageBus.register(m4);
+        m4.initialize();
+        Future<String> f = messageBus.sendEvent(e1);
+        assertFalse(f.isDone());
         String toCheck = "hi";
-        assertFalse(a.isDone());
         messageBus.complete(e1,toCheck);
-        assertTrue(a.isDone());
-        assertTrue(toCheck.equals(a.get()));
+        assertTrue(f.isDone());
+        assertTrue(toCheck.equals(f.get()));
     }
 
     @Test
     void sendBroadcast() {
         m1 = new ExampleBroadcastListenerService("tamir");
         m2 = new ExampleBroadcastListenerService("ofer");
-        m3 = new NonBroadcastListener("yair");
+        m4 = new ExampleEventHandlerService("noach");
+        messageBus.register(m1);
+        messageBus.register(m2);
+        messageBus.register(m4);
         m1.initialize();
         m2.initialize();
-        m3.initialize();
+        m4.initialize();
         messageBus.sendBroadcast(b1);
+        messageBus.sendEvent(e1);
         try {
             assertEquals(b1,  messageBus.awaitMessage(m1));
             assertEquals(b1, messageBus.awaitMessage(m2));
-            assertNotEquals(b1, messageBus.awaitMessage(m3));
+            assertNotEquals(b1, messageBus.awaitMessage(m4));
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
